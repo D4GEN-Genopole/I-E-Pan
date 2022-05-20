@@ -1,3 +1,0 @@
-[console_scripts]
-hdf5_2_json = hdf5_2_json.main:main
-

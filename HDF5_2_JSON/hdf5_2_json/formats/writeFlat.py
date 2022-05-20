@@ -79,7 +79,6 @@ def writeJSON(output, compress):
         out_dict["graph"]["nodes"].append({"id":str(geneFam.ID),"attr":{"nb_genomes":len(edge.organisms),"partition": geneFam.namedPartition,"subpartition":geneFam.partition, "nb_genes": len(geneFam.genes)}})
         out_dict["graph"]["node_types"].append({str(geneFam.ID):"GeneFamilies"})
         for gene in geneFam.genes:
-           pdb.set_trace()
            out_dict["graph"]["nodes"].append({"id":str(gene.ID),"attr":{"genomic_type":"CDS","is_fragment":gene.is_fragment}})
            out_dict["graph"]["edges"].append({"from":str(str(gene.ID)),"to":str(geneFam.ID),"type":"IN_FAMILY","attr":{}})
            out_dict["graph"]["node_types"].append({str(gene.ID):"gene"})
