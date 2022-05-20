@@ -74,20 +74,20 @@ def writeJSON(output, compress):
        out_dict["graph"]["nodes"].append({"id":str(org.name),"attr":{}})
        out_dict["graph"]["node_types"].append({str(org.name):"genome"})
     for edge in pan.edges:
-        out_dict["graph"]["edges"].append({"from":edge.source.ID,"to":edge.target.ID,"type":"NEIGHBOR_OF","attr":{"weight":len(edge.organisms)}})
+        out_dict["graph"]["edges"].append({"from":int(edge.source.ID),"to":int(edge.target.ID),"type":"NEIGHBOR_OF","attr":{"weight":len(edge.organisms)}})
     for geneFam in list(pan.geneFamilies):
-        out_dict["graph"]["nodes"].append({"id":geneFam.ID,"attr":{"nb_genomes":len(edge.organisms),"partition": geneFam.namedPartition,"subpartition":geneFam.partition, "nb_genes": len(geneFam.genes)}})
-        out_dict["graph"]["node_types"].append({geneFam.ID:"GeneFamilies"})
+        out_dict["graph"]["nodes"].append({"id":int(geneFam.ID),"attr":{"nb_genomes":len(edge.organisms),"partition": geneFam.namedPartition,"subpartition":geneFam.partition, "nb_genes": len(geneFam.genes)}})
+        out_dict["graph"]["node_types"].append({int(geneFam.ID):"GeneFamilies"})
         for gene in geneFam.genes:
            out_dict["graph"]["nodes"].append({"id":gene.ID,"attr":{"genomic_type":"CDS","is_fragment":int(gene.is_fragment)}})
            out_dict["graph"]["edges"].append({"from":gene.ID,"to":geneFam.ID,"type":"IN_FAMILY","attr":{}})
            out_dict["graph"]["node_types"].append({(gene.ID):"gene"})
            out_dict["graph"]["edges"].append({"from":gene.ID,"to":str(gene.organism.name),"type":"IN_ORG","attr":{}})
     for mod in pan.modules:
-        out_dict["graph"]["nodes"].append({"id":mod.ID,"attr":{"nb_fams":str(len(mod.families))}})
-        out_dict["graph"]["node_types"].append({mod.ID:"module"})
+        out_dict["graph"]["nodes"].append({"id":int(mod.ID),"attr":{"nb_fams":str(len(mod.families))}})
+        out_dict["graph"]["node_types"].append({int(mod.ID):"module"})
         for family in mod.families:
-           out_dict["graph"]["edges"].append({"from":family.ID,"to":mod.ID,"type":"IN_MODULE","attr":{}})
+           out_dict["graph"]["edges"].append({"from":int(family.ID),"to":int(mod.ID),"type":"IN_MODULE","attr":{}})
     with write_compressed_or_not(outname, compress) as json_file:
         json.dump(out_dict,json_file)
 
