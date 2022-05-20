@@ -18,7 +18,7 @@ PASSWORD = "1234"
 
 # Here change filename if necessary
 
-FILENAME = "PanGenome/Acinetobacter_baumannii/pangenomeGraph.json"
+FILENAME = "PanGenome/Acinetobacter_pittii/pangenomeGraph.json"
 
 
 def execute(driver, query):
@@ -65,7 +65,7 @@ def load_data():
     for n in tqdm(json_data["graph"]["nodes"], unit="node"):
 
         if n["id"] not in nodes_to_remove:
-            if json_data["graph"]["node_types"][str(n["id"])] in ["GeneFamilies", "module"]:
+            if any([x in ["GeneFamilies", "module"] for x in json_data["graph"]["node_types"][str(n["id"])]]):
                 query = (
 
                     "CREATE (n:{}) \n".format(":".join(json_data["graph"]["node_types"][str(n["id"])])) +
@@ -89,16 +89,16 @@ def load_data():
     # Create relationships
 
     for e in tqdm(json_data["graph"]["edges"], unit="edges"):
-        if e["type"] in ["IN_MODULE", "NEIGHBOR_OF"]:
+        if any([x in ["IN_MODULE", "NEIGHBOR_OF"] for x in e["type"]]):
             query = (
 
                     'MATCH (s:{} {{id: "{}"}}), (t:{} {{id: "{}"}}) \n'.format(
 
-                        json_data["graph"]["node_types"][str(e["from"])], e["from"],
+                        ":".join(json_data["graph"]["node_types"][str(e["from"])]), e["from"],
 
-                        json_data["graph"]["node_types"][str(e["to"])], e["to"]) +
+                        ":".join(json_data["graph"]["node_types"][str(e["to"])]), e["to"]) +
 
-                    'MERGE (s)-[r:{}]->(t)\n'.format(e["type"])
+                    'MERGE (s)-[r:{}]->(t)\n'.format(e["type"][0])
 
             )
             for k, v in e["attr"].items():
