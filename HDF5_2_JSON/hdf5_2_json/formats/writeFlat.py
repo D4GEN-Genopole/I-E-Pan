@@ -79,7 +79,7 @@ def writeJSON(output, compress):
         out_dict["graph"]["nodes"].append({"id":str(geneFam.ID),"attr":{"nb_genomes":len(edge.organisms),"partition": geneFam.namedPartition,"subpartition":geneFam.partition, "nb_genes": len(geneFam.genes)}})
         out_dict["graph"]["node_types"].append({str(geneFam.ID):"GeneFamilies"})
         for gene in geneFam.genes:
-           out_dict["graph"]["nodes"].append({"id":str(gene.ID),"attr":{"genomic_type":"CDS","is_fragment":gene.is_fragment}})
+           out_dict["graph"]["nodes"].append({"id":str(gene.ID),"attr":{"genomic_type":"CDS","is_fragment":int(gene.is_fragment)}})
            out_dict["graph"]["edges"].append({"from":str(str(gene.ID)),"to":str(geneFam.ID),"type":"IN_FAMILY","attr":{}})
            out_dict["graph"]["node_types"].append({str(gene.ID):"gene"})
            out_dict["graph"]["edges"].append({"from":str(str(gene.ID)),"to":str(gene.organism.name),"type":"IN_ORG","attr":{}})
@@ -90,8 +90,6 @@ def writeJSON(output, compress):
            out_dict["graph"]["edges"].append({"from":str(family.ID),"to":str(mod.ID),"type":"IN_MODULE","attr":{}})
     with write_compressed_or_not(outname, compress) as json_file:
         json.dump(out_dict,json_file)
-
-
 
 def writeJSONGeneFam(geneFam, json):
     json.write('{' + f'"id": {geneFam.ID}, "attr":'+'{'+
