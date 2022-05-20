@@ -10,6 +10,7 @@ import pkg_resources
 from statistics import median, mean, stdev
 import os
 import json
+import pdb
 
 # local libraries
 from ppanggolin.pangenome import Pangenome
@@ -35,7 +36,7 @@ def writeJSON_old(output, compress):
         json.write('{"edges":[')
         edgeids = 0
         index = pan.getIndex()
-
+          
         for edge in pan.edges:
             json.write('{"from":'+str(edge.source.ID)+','+
                    '"to":'+str(edge.target.ID)+','+
@@ -69,18 +70,29 @@ def writeJSON(output, compress):
     logging.getLogger().info("Writing the json file for the pangenome graph...")
     outname = output + "/pangenomeGraph.json"
     out_dict={"graph":{"edges":[],"nodes":[],"node_types":[]}}
+    for org in pan.organisms:
+       out_dict["graph"]["nodes"].append({"id":str(org.name),"attr":{}})
+       out_dict["graph"]["node_types"].append({str(org.name):"genome"})
     for edge in pan.edges:
-        out_dict["graph"]["edges"].append({"from":str(edge.source.ID),"to":str(edge.target.ID),"attr":{"weight":len(edge.organisms)}})
+        out_dict["graph"]["edges"].append({"from":str(edge.source.ID),"to":str(edge.target.ID),"type":"NEIGHBOR_OF","attr":{"weight":len(edge.organisms)}})
     for geneFam in list(pan.geneFamilies):
         out_dict["graph"]["nodes"].append({"id":str(geneFam.ID),"attr":{"nb_genomes":len(edge.organisms),"partition": geneFam.namedPartition,"subpartition":geneFam.partition, "nb_genes": len(geneFam.genes)}})
         out_dict["graph"]["node_types"].append({str(geneFam.ID):"GeneFamilies"})
+        for gene in geneFam.genes:
+           pdb.set_trace()
+           out_dict["graph"]["nodes"].append({"id":str(gene.ID),"attr":{"genomic_type":"CDS","is_fragment":gene.is_fragment}})
+           out_dict["graph"]["edges"].append({"from":str(str(gene.ID)),"to":str(geneFam.ID),"type":"IN_FAMILY","attr":{}})
+           out_dict["graph"]["node_types"].append({str(gene.ID):"gene"})
+           out_dict["graph"]["edges"].append({"from":str(str(gene.ID)),"to":str(gene.organism.name),"type":"IN_ORG","attr":{}})
     for mod in pan.modules:
         out_dict["graph"]["nodes"].append({"id":str(mod.ID),"attr":{"nb_fams":str(len(mod.families))}})
         out_dict["graph"]["node_types"].append({str(mod.ID):"module"})
         for family in mod.families:
-           out_dict["graph"]["edges"].append({"from":str(family.ID),"to":str(mod.ID),"attr":{}})
+           out_dict["graph"]["edges"].append({"from":str(family.ID),"to":str(mod.ID),"type":"IN_MODULE","attr":{}})
     with write_compressed_or_not(outname, compress) as json_file:
         json.dump(out_dict,json_file)
+
+
 
 def writeJSONGeneFam(geneFam, json):
     json.write('{' + f'"id": {geneFam.ID}, "attr":'+'{'+
@@ -117,13 +129,8 @@ def writeFlatFiles(pangenome, output, cpu=1, json=False, compress=False,
                        disable_bar=disable_bar)
 
     pan.getIndex()  # make the index because it will be used most likely
-    with get_context('fork').Pool(processes=cpu) as p:
-        if json:
-            processes.append(p.apply_async(func=writeJSON, args=(output, compress)))
-
-        for process in processes:
-            process.get()  # get all the results
-
+    if json:
+       writeJSON(output, compress)
 
 def launchFlat(args):
     mkOutdir(args.output, args.force)
