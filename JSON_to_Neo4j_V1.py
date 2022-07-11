@@ -2,6 +2,8 @@
 # coding: utf-8
 
 import json
+import pdb
+
 from tqdm import tqdm
 
 # import numpy
@@ -18,7 +20,9 @@ PASSWORD = "1234"
 
 # Here change filename if necessary
 
-FILENAME = "PanGenome/Acinetobacter_pittii/pangenomeGraph.json"
+import glob
+
+FILENAMES = ["PanGenome/Acinetobacter_nosocomialis/pangenomeGraph.json","PanGenome/Acinetobacter_nosocomialis/pangenomeGraph.json"]
 
 
 def execute(driver, query):
@@ -38,13 +42,17 @@ def load_data():
 
         URI, auth=(USER, PASSWORD))
 
-    clean_query = "MATCH (n) DETACH DELETE n"
-
-    execute(driver, clean_query)
-
-    with open(FILENAME, "r+") as f:
-
-        json_data = json.load(f)
+    # clean_query = "MATCH (n) DETACH DELETE n"
+    #
+    # execute(driver, clean_query)
+    json_data = {"graph": {"edges": [], "nodes": [], "node_types": {}}}
+    for path in FILENAMES:
+        print(path)
+        with open(path, "r+") as f:
+            json_data_local = json.load(f)
+            json_data["graph"]["edges"] += json_data_local["graph"]["edges"]
+            json_data["graph"]["nodes"] += json_data_local["graph"]["nodes"]
+            json_data["graph"]["node_types"].update(json_data_local["graph"]["node_types"])
 
     nodes_to_remove = []
 
@@ -59,13 +67,17 @@ def load_data():
     # nodes_to_remove = numpy.random.choice(
 
     #     [n["id"] for n in json_data["graph"]["nodes"]], N, replace=False)
+    import pdb
+    with open("panfam_output_DATE2022-05-21_HOUR08.56.36_PID17689/PanFAM5080.tsv",'r') as panfam_file:
+        for line in panfam_file:
+            elements = line.split()
+            json_data["graph"]["edges"].append({"from": "F_" + elements[1].strip('"'), "to": "F_" + elements[0].strip('"'), "type": ["SIMILAR_TO"], "attr": {}})
 
     # Create nodes
-
     for n in tqdm(json_data["graph"]["nodes"], unit="node"):
-
+        print(json_data["graph"]["node_types"]["s_Acinetobacter_pittii"]) if str(n["id"]) == "s_Acinetobacter_pittii" else None
         if n["id"] not in nodes_to_remove:
-            if any([x in ["GeneFamilies", "module"] for x in json_data["graph"]["node_types"][str(n["id"])]]):
+            if any([x in ["GeneFamily", "Module", "Taxa"] for x in json_data["graph"]["node_types"][str(n["id"])]]):
                 query = (
 
                     "CREATE (n:{}) \n".format(":".join(json_data["graph"]["node_types"][str(n["id"])])) +
@@ -73,6 +85,7 @@ def load_data():
                     f'SET n.id = "{n["id"]}"' + "\n"
 
                 )
+                print(json_data["graph"]["node_types"]["s_Acinetobacter_pittii"]) if str(n["id"]) == "s_Acinetobacter_pittii" else None
 
                 for k, v in n["attr"].items():
 
@@ -89,7 +102,7 @@ def load_data():
     # Create relationships
 
     for e in tqdm(json_data["graph"]["edges"], unit="edges"):
-        if any([x in ["IN_MODULE", "NEIGHBOR_OF"] for x in e["type"]]):
+        if any([x in ["IN_MODULE", "NEIGHBOR_OF", "IN_TAXA", "SIMILAR_TO"] for x in e["type"]]):
             query = (
 
                     'MATCH (s:{} {{id: "{}"}}), (t:{} {{id: "{}"}}) \n'.format(
